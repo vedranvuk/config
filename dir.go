@@ -154,16 +154,34 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 		return nil
 	}
 
-	if err = d.LoadProgramConfig(name, out); err != nil && !errors.Is(err, os.ErrNotExist) && !errors.Is(err, ErrProgramDirNotSupported) {
-		return err
+	loaded := false
+
+	if err = d.LoadProgramConfig(name, out); err != nil {
+		if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, ErrProgramDirNotSupported) {
+			return err
+		}
+	} else {
+		loaded = true
 	}
 
-	if err = d.LoadUserConfig(name, out); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
+	if err = d.LoadUserConfig(name, out); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	} else {
+		loaded = true
 	}
 
-	if err = d.LoadSystemConfig(name, out); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
+	if err = d.LoadSystemConfig(name, out); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	} else {
+		loaded = true
+	}
+
+	if !loaded {
+		return ErrNoConfigLoaded
 	}
 
 	return nil
