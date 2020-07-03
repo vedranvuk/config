@@ -98,6 +98,12 @@ func setDefaults(v reflect.Value, all bool, warnings *errorex.ErrorEx) {
 			continue
 		}
 
+		// If a struct field, recurse.
+		if v.Field(i).Kind() == reflect.Struct {
+			setDefaults(v.Field(i), all, warnings)
+			continue
+		}
+
 		// Parse out the default value.
 		tag, ok := v.Type().Field(i).Tag.Lookup(ConfigTag)
 		if !ok {
@@ -117,12 +123,6 @@ func setDefaults(v reflect.Value, all bool, warnings *errorex.ErrorEx) {
 			if err := tu.UnmarshalText([]byte(valdefault)); err != nil {
 				warnings.Extra(ErrInvalidDefault.WrapCauseArgs(err, valdefault, v.Type().Field(i).Name))
 			}
-			continue
-		}
-
-		// If a struct field, recurse.
-		if v.Field(i).Kind() == reflect.Struct {
-			setDefaults(v.Field(i), all, warnings)
 			continue
 		}
 
