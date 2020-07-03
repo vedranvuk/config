@@ -240,9 +240,9 @@ func processField(tags tagmap, name string, clamp bool, field reflect.Value) err
 	}
 
 	// Process choices.
-	if strings.Contains(rng, ",") {
+	if strings.Contains(rng, " ") {
 
-		vals := strings.Split(rng, ",")
+		vals := strings.Split(rng, " ")
 		i := 0
 		for _, val := range vals {
 			if val != "" {

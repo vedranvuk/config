@@ -243,3 +243,9 @@ func (d *Dir) SaveProgramConfig(name string, in interface{}) error {
 
 	return WriteConfigFile(path, in)
 }
+
+// RemoveAll removes Dir's configuration directory from all configuration
+// locations.
+func (d *Dir) RemoveAll() error {
+	return nil
+}

@@ -55,9 +55,9 @@ func TestSetDefaultsAll(t *testing.T) {
 func TestSanitize(t *testing.T) {
 
 	type Test struct {
-		Name     string `config:"range=foo,bar,baz;default=bar"`
-		Surname  string `config:"range=doe,dope,donut"`
-		CarBrand string `config:"range=tesla,bmw,lada"`
+		Name     string `config:"range=foo bar baz;default=bar"`
+		Surname  string `config:"range=doe dope donut"`
+		CarBrand string `config:"range=tesla bmw lada"`
 		Age      int    `config:"range=0:150"`
 		Height   int    `config:"range=:200"`
 		Weight   int    `config:"range=10:"`
@@ -120,9 +120,9 @@ func BenchmarkSanitize(b *testing.B) {
 	b.StopTimer()
 
 	type Test struct {
-		Name     string `config:"range=foo,bar,baz;default=bar"`
-		Surname  string `config:"range=doe,dope,donut"`
-		CarBrand string `config:"range=tesla,bmw,lada"`
+		Name     string `config:"range=foo bar baz;default=bar"`
+		Surname  string `config:"range=doe dope donut"`
+		CarBrand string `config:"range=tesla bmw lada"`
 		Age      int    `config:"range=0:150"`
 		Height   int    `config:"range=:200"`
 		Weight   int    `config:"range=10:"`
@@ -142,9 +142,9 @@ func BenchmarkSanitizeNoClamp(b *testing.B) {
 	b.StopTimer()
 
 	type Test struct {
-		Name     string `config:"range=foo,bar,baz;default=bar"`
-		Surname  string `config:"range=doe,dope,donut"`
-		CarBrand string `config:"range=tesla,bmw,lada"`
+		Name     string `config:"range=foo bar baz;default=bar"`
+		Surname  string `config:"range=doe dope donut"`
+		CarBrand string `config:"range=tesla bmw lada"`
 		Age      int    `config:"range=0:150"`
 		Height   int    `config:"range=:200"`
 		Weight   int    `config:"range=10:"`
