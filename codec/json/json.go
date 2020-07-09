@@ -16,7 +16,7 @@ type JSON struct{}
 
 // Encode implements Codec.Encode.
 func (j *JSON) Encode(config interface{}) ([]byte, error) {
-	return json.MarshalIndent(config, "", "/t")
+	return json.MarshalIndent(config, "", "\t")
 }
 
 // Decode implements Codec.Decode.
