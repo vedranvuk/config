@@ -99,6 +99,10 @@ func setDefaults(v reflect.Value, all bool, warnings *errorex.ErrorEx) {
 			continue
 		}
 
+		if v.Field(i).Type() == interfaceType {
+			continue
+		}
+
 		// If a struct field, recurse.
 		if v.Field(i).Kind() == reflect.Struct {
 			setDefaults(v.Field(i), all, warnings)
@@ -198,6 +202,10 @@ func sanitize(config reflect.Value, clamp bool, warnings *errorex.ErrorEx) {
 	for i := 0; i < config.NumField(); i++ {
 
 		if !config.Field(i).CanSet() {
+			continue
+		}
+
+		if config.Field(i).Type() == interfaceType {
 			continue
 		}
 
