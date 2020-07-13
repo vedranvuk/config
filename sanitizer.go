@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	// ErrParseWarning is returned when an error occurs during one
-	// Warnings are stored in the returned error's Extra field. It is up to the
+	// ErrParseWarning is returned when an error occurs during parsing of one
+	// or more struct tags that carry a config key. ANy fields that produced
+	// errors are stored in the returned error's Extra field. It is up to the
 	// user to consider errors fatal or not.
 	ErrParseWarning = ErrConfig.Wrap("warning")
 	// ErrInvalidTag is returned when an invalid tag is encountered on a field.
@@ -57,7 +58,7 @@ const (
 // SetDefaults takes a pointer to a config struct, traverses all of its fields
 // at any level if there are embedded structs with config tags, sets their
 // default field values according to tags and, if any errors or warnings
-// occured returns an ErrParseWarning containing errors in it's Extra field.
+// occured returns an ErrParseWarning containing errors in its' Extra field.
 //
 // If all is specified all fields are reset to defaults, otherwise only nil
 // fields or fields whose values equal nil value as defined in the field tag
@@ -70,7 +71,7 @@ const (
 // If a field has an incompatible/invalid default value defined an
 // ErrInvalidDefault is appended to Extras.
 //
-// Any other errors that occur are returned as well in the same manner.
+// Any other errors signify a no-op and a failure.
 //
 func SetDefaults(config interface{}, all bool) error {
 

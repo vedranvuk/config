@@ -2,13 +2,13 @@
 
 ## Description
 
-Config is a lightweight collection of configuration related functions aiding with marshaling, defaulting and sanitation. It aims to be straightforward and portable first and foremost.
+Config is a lightweight collection of configuration related functions aiding with marshaling, defaulting, sanitation and type system. It aims to be straightforward and portable first and foremost. It works with `struct` types as compositable configuration section containers and uses custom field tags to control properties of configuration values. 
 
-Functions that manage configuration priorities across platforms use an user extensible Codec interface to provide multiple marshaling formats. Currently supported formats are **json**, **xml** and **gob**.
+Configuration marshaling functions use an user extensible Codec interface to provide multiple marshaling formats selected by extension at marshaling time. Formats supported out of the box are **json**, **xml** and **gob** and are imported by user as required.
 
-A `Dir` type provides a configuration directory across system, user and program configuration locations in an unified way.
+A `Dir` helper type provides a configuration directory across system, user and program configuration locations in a multiplatform and unified manner.
 
-Functions for defaulting and sanitizing fields inside configuration structs are provided.
+An `Interface` helper type serves as a wrapper for `interface{}` values that unmarshals interfaces to types contained in them at marshaling time instead of generic `map[string]interface{}` type.
 
 ## License
 

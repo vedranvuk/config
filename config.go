@@ -38,6 +38,10 @@ var (
 // If an error occurs it is returned.
 func WriteConfigFile(filename string, config interface{}) error {
 
+	if err := interfaceRegister(config); err != nil {
+		return err
+	}
+
 	c, err := codec.Get(ext(filename))
 	if err != nil {
 		return err
@@ -58,6 +62,11 @@ func WriteConfigFile(filename string, config interface{}) error {
 // Codec is selected from extension and must be registered.
 //
 // If an error occurs it is returned.
+//
+// ReadConfigFile decodes the loaded stream twice if any Interface structs are
+// detected at any level in config. This is required to replace returned
+// map[string]interface{} vars in contained interfaces with types at marshaling
+// time.
 func ReadConfigFile(filename string, config interface{}) error {
 
 	c, err := codec.Get(ext(filename))
@@ -72,6 +81,17 @@ func ReadConfigFile(filename string, config interface{}) error {
 
 	if err := c.Decode(data, config); err != nil {
 		return err
+	}
+
+	needsreload, err := InterfaceSetup(config)
+	if err != nil {
+		return err
+	}
+
+	if needsreload {
+		if err := c.Decode(data, config); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -126,7 +146,7 @@ func GetSystemConfigPath() (path string, err error) {
 // on the underlying operating system and is defined as follows:
 //
 // darwin:             "$HOME"
-// linux, unix, et al: "${XDG_CONFIG_DIR:-${HOME}"
+// linux, unix, et al: "$HOME"
 // windows:            "%USERPROFILE%"
 //
 func GetUserConfigPath() (path string, err error) {
@@ -137,7 +157,6 @@ func GetUserConfigPath() (path string, err error) {
 	case "aix", "android", "dragonfly", "freebsd", "illumos", "linux", "netbsd",
 		"openbsd", "plan9", "solaris":
 		path = filepath.Join(os.ExpandEnv("$HOME"), ".config")
-		// path = filepath.Join(os.ExpandEnv("${XDG_CONFIG_DIR:-${HOME}"), ".config")
 	case "windows":
 		path = os.ExpandEnv("%%USERPROFILE%%")
 	case "js":
