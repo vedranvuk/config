@@ -142,7 +142,12 @@ func initializeInterfaceField(fld reflect.Value) (updated bool, err error) {
 		return
 	}
 
-	nvt, e := registry.GetType(fld.FieldByName("Type").String())
+	tn := fld.FieldByName("Type").String()
+	if tn == "" {
+		err = nil
+		return
+	}
+	nvt, e := registry.GetType(tn)
 	if e != nil {
 		err = e
 		return
