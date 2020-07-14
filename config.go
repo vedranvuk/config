@@ -52,7 +52,7 @@ func WriteConfigFile(filename string, config interface{}) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filename, data, os.ModePerm)
+	return ioutil.WriteFile(filename, data, 0644)
 }
 
 // ReadConfigFile reads a configuration file specified by filename into
