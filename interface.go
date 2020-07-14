@@ -5,6 +5,7 @@
 package config
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/vedranvuk/typeregistry"
@@ -238,6 +239,11 @@ func registerInterfaceField(fld reflect.Value) error {
 	fld.FieldByName("Type").SetString(val.Elem().Type().String())
 
 	if err := registry.Register(val.Elem().Interface()); err != nil {
+		// Skip duplicate registrytion errors;
+		// Config could be loaded multiple times at runtime.
+		if errors.Is(err, typeregistry.ErrDuplicateEntry) {
+			return nil
+		}
 		return err
 	}
 
