@@ -38,7 +38,7 @@ var (
 // If an error occurs it is returned.
 func WriteConfigFile(filename string, config interface{}) error {
 
-	if err := RegisterInterfaceTypes(config); err != nil {
+	if err := RegisterInterfaces(config); err != nil {
 		return err
 	}
 
@@ -83,7 +83,7 @@ func ReadConfigFile(filename string, config interface{}) error {
 		return err
 	}
 
-	needsreload, err := InitializeInterfaceTypes(config)
+	needsreload, err := InitializeInterfaces(config)
 	if err != nil {
 		return err
 	}
