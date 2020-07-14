@@ -74,83 +74,67 @@ func InitializeInterfaces(config interface{}) (bool, error) {
 		return false, ErrInvalidParam
 	}
 
-	return initializeInterfaces(v)
+	updated := false
+	return updated, initializeInterfaces(v, &updated)
 }
 
 // initializeInterfaces is the implementation of InterfaceSetup.
-func initializeInterfaces(root reflect.Value) (updated bool, err error) {
+func initializeInterfaces(root reflect.Value, updated *bool) error {
 
 	var fld reflect.Value
-	var upd bool
-	var e error
 	for i := 0; i < root.NumField(); i++ {
 		fld = reflect.Indirect(root.Field(i))
 
 		switch fld.Kind() {
 		case reflect.Array, reflect.Slice:
 			for i := 0; i < fld.Len(); i++ {
-				upd, e = initializeInterfaceField(fld.Index(i))
-				if e != nil {
-					err = e
-					return
+				if err := initializeInterfaceField(fld.Index(i), updated); err != nil {
+					return err
 				}
 			}
 		case reflect.Map:
 			iter := fld.MapRange()
 			for iter.Next() {
-				upd, e = initializeInterfaceField(iter.Value())
-				if e != nil {
-					err = e
-					return
+				if err := initializeInterfaceField(iter.Value(), updated); err != nil {
+					return err
 				}
 			}
 		case reflect.Struct:
-			upd, e = initializeInterfaceField(fld)
-			if e != nil {
-				err = e
-				return
+			if err := initializeInterfaceField(fld, updated); err != nil {
+				return err
 			}
+
 		default:
 			continue
 		}
 
-		if upd {
-			updated = true
-		}
-
 	}
 
-	return
+	return nil
 }
 
 // initializeInterfaceField initializes an Interface type in a config struct
 // field.
-func initializeInterfaceField(fld reflect.Value) (updated bool, err error) {
+func initializeInterfaceField(fld reflect.Value, updated *bool) error {
 
 	if fld.Kind() != reflect.Struct {
-		return false, nil
+		return nil
 	}
 
 	if fld.Type() != interfaceType {
-		if upd, e := initializeInterfaces(fld); e == nil {
-			if upd {
-				updated = true
-			}
-		} else {
-			return false, e
+		if err := initializeInterfaces(fld, updated); err != nil {
+			return err
 		}
-		return
+		return nil
 	}
 
 	tn := fld.FieldByName("Type").String()
 	if tn == "" {
-		err = nil
-		return
+		return nil
 	}
-	nvt, e := registry.GetType(tn)
-	if e != nil {
-		err = e
-		return
+	nvt, err := registry.GetType(tn)
+	if err != nil {
+		return err
 	}
 
 	if nvt.Kind() == reflect.Ptr {
@@ -159,9 +143,9 @@ func initializeInterfaceField(fld reflect.Value) (updated bool, err error) {
 		fld.FieldByName("Value").Set(reflect.New(nvt).Elem())
 	}
 
-	updated = true
+	*updated = true
 
-	return
+	return nil
 }
 
 // RegisterInterfaces takes a pointer to a config struct and recursively
