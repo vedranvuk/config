@@ -5,7 +5,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
@@ -24,7 +23,7 @@ func TestInterface(t *testing.T) {
 
 	const TestFilename = "interface_test.json"
 
-	val := 9001
+	val := int(9001)
 
 	data := &Root{
 		Interface{
@@ -53,13 +52,15 @@ func TestInterface(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Printf("%#v\n", data)
-	fmt.Printf("%#v\n", newdata)
-
-	/*
-		if !reflect.DeepEqual(data, newdata) {
-			t.Fatal("TestInterface failed")
-		}
-	*/
-
+	a := data.PStruct.Value.(*Child)
+	b := newdata.PStruct.Value.(*Child)
+	if a.Age != b.Age {
+		t.Fatal("TestInterface failed.")
+	}
+	if *data.PInt.Value.(*int) != *newdata.PInt.Value.(*int) {
+		t.Fatal("TestInterface failed.")
+	}
+	if data.Int.Value.(int) != int(newdata.Int.Value.(float64)) {
+		t.Fatal("TestInterface failed.")
+	}
 }
