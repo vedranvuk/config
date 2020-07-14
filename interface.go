@@ -41,16 +41,16 @@ type Interface struct {
 	Value interface{}
 }
 
-// InitializeInterfaceTypes takes a config struct and recursively preallocates
-// values of types registered for that Interface into Value in order to avoid
-// allocation of generic map[string]interface{} values for that interfaces when
-// unmarshaling.
+// InitializeInterfaceTypes takes a pointer to a config struct and recursively
+// preallocates values of types registered for that Interface into Value in
+// order to avoid allocation of generic map[string]interface{} values for those
+// interfaces when unmarshaling.
 //
 // Specified config must be a pointer to a config struct and is modified by
 // this function, possibly even in case of an error.
 //
 // Any Interface fields found inside config at any depth must have the Type
-// field populated by a valid registered type.
+// field populated by a valid registered type or an error will occur.
 //
 // Returns a bool telling if one or more Interface types were detected and
 // modified or an error if one occurs.
@@ -74,44 +74,94 @@ func InitializeInterfaceTypes(config interface{}) (bool, error) {
 func initializeInterfaceTypes(root reflect.Value) (updated bool, err error) {
 
 	var fld reflect.Value
+	var upd bool
+	var e error
 	for i := 0; i < root.NumField(); i++ {
-		fld = root.Field(i)
+		fld = reflect.Indirect(root.Field(i))
 
-		if fld.Kind() != reflect.Struct {
-			continue
-		}
-
-		if fld.Type() != interfaceType {
-			if upd, e := initializeInterfaceTypes(fld); e == nil {
-				if upd {
-					updated = true
+		switch fld.Kind() {
+		case reflect.Array, reflect.Slice:
+			for i := 0; i < fld.Len(); i++ {
+				upd, e = initializeFieldValue(fld.Index(i))
+				if e != nil {
+					err = e
+					return
 				}
-			} else {
-				return false, e
 			}
+		case reflect.Map:
+			iter := fld.MapRange()
+			for iter.Next() {
+				upd, e = initializeFieldValue(iter.Value())
+				if e != nil {
+					err = e
+					return
+				}
+			}
+		case reflect.Struct:
+			upd, e = initializeFieldValue(fld)
+			if e != nil {
+				err = e
+				return
+			}
+		default:
 			continue
 		}
 
-		nvt, e := registry.GetType(fld.FieldByName("Type").String())
-		if e != nil {
-			err = e
-			return
+		if upd {
+			updated = true
 		}
 
-		if nvt.Kind() == reflect.Ptr {
-			fld.FieldByName("Value").Set(reflect.New(nvt.Elem()))
-		} else {
-			fld.FieldByName("Value").Set(reflect.New(nvt).Elem())
-		}
-
-		updated = true
 	}
 
 	return
 }
 
-// RegisterInterfaceTypes is used when marshaling a config struct and registers
-// type contained in Interface.Value for later use at unmarshaling time.
+// initializeFieldValue initializes an Interface type in a config struct field.
+func initializeFieldValue(fld reflect.Value) (updated bool, err error) {
+
+	if fld.Kind() != reflect.Struct {
+		return false, nil
+	}
+
+	if fld.Type() != interfaceType {
+		if upd, e := initializeInterfaceTypes(fld); e == nil {
+			if upd {
+				updated = true
+			}
+		} else {
+			return false, e
+		}
+		return
+	}
+
+	nvt, e := registry.GetType(fld.FieldByName("Type").String())
+	if e != nil {
+		err = e
+		return
+	}
+
+	if nvt.Kind() == reflect.Ptr {
+		fld.FieldByName("Value").Set(reflect.New(nvt.Elem()))
+	} else {
+		fld.FieldByName("Value").Set(reflect.New(nvt).Elem())
+	}
+
+	updated = true
+
+	return
+}
+
+// RegisterInterfaceTypes takes a pointer to a config struct and recursively
+// registers types of Values with type registry found in any Interface at any
+// level and populate Type field of Interfaces with detected type.
+//
+// This prepares a config struct for marshaling so registered types can be
+// restored to Value interfaces on unmarshaling.
+//
+// Specified config must be a pointer to a config struct and is modified by
+// this function, possibly even in case of an error.
+//
+// Returns an error if one occurs.
 func RegisterInterfaceTypes(config interface{}) error {
 
 	if config == nil {
@@ -131,25 +181,52 @@ func registerInterfaceTypes(root reflect.Value) error {
 
 	var fld reflect.Value
 	for i := 0; i < root.NumField(); i++ {
-		fld = root.Field(i)
+		fld = reflect.Indirect(root.Field(i))
 
-		if fld.Kind() != reflect.Struct {
-			continue
-		}
-
-		if fld.Type() != interfaceType {
-			if err := registerInterfaceTypes(fld); err != nil {
+		switch fld.Kind() {
+		case reflect.Array, reflect.Slice:
+			for i := 0; i < fld.Len(); i++ {
+				if err := registerFieldValue(fld.Index(i)); err != nil {
+					return err
+				}
+			}
+		case reflect.Map:
+			iter := fld.MapRange()
+			for iter.Next() {
+				if err := registerFieldValue(fld.Index(i)); err != nil {
+					return err
+				}
+			}
+		case reflect.Struct:
+			if err := registerFieldValue(fld); err != nil {
 				return err
 			}
+		default:
 			continue
 		}
+	}
 
-		val := fld.FieldByName("Value")
-		fld.FieldByName("Type").SetString(val.Elem().Type().String())
+	return nil
+}
 
-		if err := registry.Register(val.Elem().Interface()); err != nil {
+// registerFieldValue registers a type in a config struct field.
+func registerFieldValue(fld reflect.Value) error {
+
+	if fld.Kind() != reflect.Struct {
+		return nil
+	}
+
+	if fld.Type() != interfaceType {
+		if err := registerInterfaceTypes(fld); err != nil {
 			return err
 		}
+	}
+
+	val := fld.FieldByName("Value")
+	fld.FieldByName("Type").SetString(val.Elem().Type().String())
+
+	if err := registry.Register(val.Elem().Interface()); err != nil {
+		return err
 	}
 
 	return nil
