@@ -17,9 +17,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/vedranvuk/errorex"
-
 	"github.com/vedranvuk/config/codec"
+	"github.com/vedranvuk/errorex"
 )
 
 var (
