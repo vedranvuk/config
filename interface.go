@@ -229,6 +229,9 @@ func registerInterfaceField(fld reflect.Value) error {
 		return nil
 	}
 
+	if fld.FieldByName("Type").String() != "" {
+		return nil
+	}
 	fld.FieldByName("Type").SetString(val.Elem().Type().String())
 
 	if err := registry.Register(val.Elem().Interface()); err != nil {
