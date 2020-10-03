@@ -228,7 +228,7 @@ func registerInterfaceField(fld reflect.Value) error {
 	fld.FieldByName("Type").SetString(val.Elem().Type().String())
 
 	if err := registry.Register(val.Elem().Interface()); err != nil {
-		// Skip duplicate registrytion errors;
+		// Skip duplicate registration errors;
 		// Config could be loaded multiple times at runtime.
 		if errors.Is(err, typeregistry.ErrDuplicateEntry) {
 			return nil
@@ -236,6 +236,23 @@ func registerInterfaceField(fld reflect.Value) error {
 		return err
 	}
 
+	return nil
+}
+
+// RegisterType registers a type or specified value or returns an error.
+func RegisterType(value interface{}) error {
+	if err := registry.Register(value); err != nil {
+		return err
+	}
+	return nil
+}
+
+// RegisterTypeByName registers a type of specified value under specified name
+// or returns an error.
+func RegisterTypeByName(name string, value interface{}) error {
+	if err := registry.RegisterNamed(name, value); err != nil {
+		return err
+	}
 	return nil
 }
 
