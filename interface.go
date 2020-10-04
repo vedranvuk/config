@@ -117,7 +117,9 @@ func initializeInterfaces(root reflect.Value, updated *bool) error {
 // field.
 func initializeInterfaceField(fld reflect.Value, updated *bool) error {
 
-	fld = reflect.Indirect(fld)
+	for fld.Kind() == reflect.Ptr {
+		fld = reflect.Indirect(fld)
+	}
 
 	if fld.Kind() != reflect.Struct {
 		return nil
@@ -211,7 +213,9 @@ func registerInterfaces(root reflect.Value) error {
 // registerInterfaceField registers a type in a config struct field.
 func registerInterfaceField(fld reflect.Value) error {
 
-	fld = reflect.Indirect(fld)
+	for fld.Kind() == reflect.Ptr {
+		fld = reflect.Indirect(fld)
+	}
 
 	if fld.Kind() != reflect.Struct {
 		return nil
