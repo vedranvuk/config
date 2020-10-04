@@ -11,8 +11,8 @@ import (
 	"github.com/vedranvuk/typeregistry"
 )
 
-// Interface is a wrapper for marshalling interface values to abstract data
-// formats such as JSON that do not store type information by design.
+// Interface is a wrapper for marshalling interface values to and from abstract
+// data formats such as JSON that do not store type information by design.
 //
 // It uses a type registry to allocate interface values of correct type prior
 // to unmarshaling data to interface to avoid unmarshaling to generic
@@ -42,10 +42,21 @@ type Interface struct {
 	Value interface{}
 }
 
-// RegisterInterfaceType registers a type with type registry for use with
-// Interfaces. Returns an error if one occurs.
-func RegisterInterfaceType(v interface{}) error {
-	return registry.Register(v)
+// RegisterType pre-registers a type of specified value with the registry.
+func RegisterType(value interface{}) error {
+	if err := registry.Register(value); err != nil {
+		return err
+	}
+	return nil
+}
+
+// RegisterTypeByName pre-registers a type of specified value with the registry
+// by name.
+func RegisterTypeByName(name string, value interface{}) error {
+	if err := registry.RegisterNamed(name, value); err != nil {
+		return err
+	}
+	return nil
 }
 
 // InitializeInterfaces takes a pointer to a config struct and recursively
@@ -247,23 +258,6 @@ func registerInterfaceField(fld reflect.Value) error {
 		return err
 	}
 
-	return nil
-}
-
-// RegisterType registers a type or specified value or returns an error.
-func RegisterType(value interface{}) error {
-	if err := registry.Register(value); err != nil {
-		return err
-	}
-	return nil
-}
-
-// RegisterTypeByName registers a type of specified value under specified name
-// or returns an error.
-func RegisterTypeByName(name string, value interface{}) error {
-	if err := registry.RegisterNamed(name, value); err != nil {
-		return err
-	}
 	return nil
 }
 

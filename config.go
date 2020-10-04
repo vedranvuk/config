@@ -34,6 +34,9 @@ var (
 //
 // Codec is selected from extension and must be registered.
 //
+// WriteConfigFile registers all found config.Interface types at any depth with
+// the type registry.
+//
 // If an error occurs it is returned.
 func WriteConfigFile(filename string, config interface{}) error {
 
@@ -66,6 +69,12 @@ func WriteConfigFile(filename string, config interface{}) error {
 // detected at any level in config. This is required to replace returned
 // map[string]interface{} vars in contained interfaces with types at marshaling
 // time.
+//
+// Types must be registered with the registry in order for Interfaces to be
+// loaded properly. If an instance of a type being read was not written to file
+// prior to this call using WriteConfigFile the type of the value specified by
+// config must have been registered manually using RegisterType or
+// RegisterTypeByName.
 func ReadConfigFile(filename string, config interface{}) error {
 
 	c, err := codec.Get(ext(filename))
@@ -97,7 +106,7 @@ func ReadConfigFile(filename string, config interface{}) error {
 }
 
 // ext is a helper that extracts the extension from the filename, without the
-// dot. If no extension is found in filename, an emty string is returned.
+// dot. If no extension is found in filename, an empty string is returned.
 func ext(filename string) (s string) {
 	s = filepath.Ext(filename)
 	if len(s) == 0 {

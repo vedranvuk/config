@@ -19,9 +19,9 @@ var (
 	ErrCodecNotRegistered = ErrCodec.WrapFormat("codec '%s' not registered")
 )
 
-// Codec defines a Config Codec interface.
+// Codec defines a configuration marshaling Codec interface.
 type Codec interface {
-	// Encode must encode interface to a bite slice or return an error.
+	// Encode must encode interface to a byte slice or return an error.
 	Encode(interface{}) ([]byte, error)
 	// Decode must decode the byte slice to the interface or return an error.
 	Decode([]byte, interface{}) error
