@@ -31,6 +31,35 @@ func TestSetDefaults(t *testing.T) {
 	}
 }
 
+func TestSetDefaultsPtr(t *testing.T) {
+
+	type Test struct {
+		Name   *string `config:"default=foo"`
+		Age    *int    `config:"nil=-1;default=42"`
+		Height *int    `config:"default=190"`
+		Weight *int    `config:"default=80"`
+		Income *int    `config:"default=50000"`
+	}
+
+	test := &Test{}
+
+	if err := SetDefaults(test, false); err != nil && !errors.Is(err, ErrParseWarning) {
+		t.Fatal(err)
+	}
+
+	var (
+		name   string = "foo"
+		age    int    = 42
+		height int    = 190
+		weight int    = 80
+		income int    = 50000
+	)
+
+	if *test.Name != name || *test.Age != age || *test.Height != height || *test.Weight != weight || *test.Income != income {
+		t.Fatal("TestSetDefaultsPtr failed.")
+	}
+}
+
 func TestSetDefaultsAll(t *testing.T) {
 
 	type Test struct {
@@ -94,6 +123,7 @@ func BenchmarkSetDefaults(b *testing.B) {
 		SetDefaults(test, false)
 	}
 }
+
 func BenchmarkSetDefaultsAll(b *testing.B) {
 
 	b.StopTimer()

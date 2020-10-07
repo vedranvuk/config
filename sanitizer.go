@@ -135,7 +135,7 @@ func setDefaults(v reflect.Value, all bool, warnings *errorex.ErrorEx) {
 		defaultnil := false
 		if valnil, oknil := tm[NilKey]; oknil {
 			nilv := reflect.New(v.Field(i).Type())
-			if err := reflectex.StringToValue(valnil, nilv); err != nil {
+			if err := reflectex.StringToValue(valnil, reflect.Indirect(nilv)); err != nil {
 				panic(err)
 			}
 			if reflectex.CompareValues(v.Field(i), nilv.Elem()) == 0 {
@@ -265,7 +265,7 @@ func processField(tags tagmap, name string, clamp bool, field reflect.Value) err
 		cv := reflect.New(field.Type())
 		matched := false
 		for i := 0; i < len(vals); i++ {
-			if err := reflectex.StringToValue(vals[i], cv); err != nil {
+			if err := reflectex.StringToValue(vals[i], reflect.Indirect(cv)); err != nil {
 				return err
 			}
 			if reflectex.CompareValues(field, cv.Elem()) == 0 {
@@ -302,7 +302,7 @@ func processField(tags tagmap, name string, clamp bool, field reflect.Value) err
 		// Minimum
 		if vals[0] != "" {
 
-			if err := reflectex.StringToValue(vals[0], cv); err != nil {
+			if err := reflectex.StringToValue(vals[0], reflect.Indirect(cv)); err != nil {
 				return err
 			}
 
@@ -325,7 +325,7 @@ func processField(tags tagmap, name string, clamp bool, field reflect.Value) err
 		// Maximum
 		if vals[1] != "" {
 
-			if err := reflectex.StringToValue(vals[1], cv); err != nil {
+			if err := reflectex.StringToValue(vals[1], reflect.Indirect(cv)); err != nil {
 				return err
 			}
 
