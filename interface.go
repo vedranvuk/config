@@ -198,19 +198,19 @@ func registerInterfaces(root reflect.Value) error {
 		switch fld.Kind() {
 		case reflect.Array, reflect.Slice:
 			for i := 0; i < fld.Len(); i++ {
-				if err := registerInterfaceField(fld.Index(i)); err != nil {
+				if err := registerInterfaceValue(fld.Index(i)); err != nil {
 					return err
 				}
 			}
 		case reflect.Map:
 			iter := fld.MapRange()
 			for iter.Next() {
-				if err := registerInterfaceField(fld.Index(i)); err != nil {
+				if err := registerInterfaceValue(fld.Index(i)); err != nil {
 					return err
 				}
 			}
 		case reflect.Struct:
-			if err := registerInterfaceField(fld); err != nil {
+			if err := registerInterfaceValue(fld); err != nil {
 				return err
 			}
 		default:
@@ -221,22 +221,11 @@ func registerInterfaces(root reflect.Value) error {
 	return nil
 }
 
-// registerInterfaceField registers a type in a config struct field.
-func registerInterfaceField(fld reflect.Value) error {
-
-	for fld.Kind() == reflect.Ptr {
-		fld = reflect.Indirect(fld)
-	}
-
-	if fld.Kind() != reflect.Struct {
-		return nil
-	}
+// registerInterfaceValue registers a type in a config struct field.
+func registerInterfaceValue(fld reflect.Value) error {
 
 	if fld.Type() != interfaceType {
-		if err := registerInterfaces(fld); err != nil {
-			return err
-		}
-		return nil
+		return registerInterfaces(fld)
 	}
 
 	val := fld.FieldByName("Value")
@@ -247,9 +236,11 @@ func registerInterfaceField(fld reflect.Value) error {
 	if fld.FieldByName("Type").String() != "" {
 		return nil
 	}
-	fld.FieldByName("Type").SetString(val.Elem().Type().String())
 
-	if err := registry.Register(val.Elem().Interface()); err != nil {
+	typename := typeregistry.GetLongTypeName(val.Interface())
+	fld.FieldByName("Type").SetString(typename)
+
+	if err := registry.RegisterNamed(typename, val.Interface()); err != nil {
 		// Skip duplicate registration errors;
 		// Config could be loaded multiple times at runtime.
 		if errors.Is(err, typeregistry.ErrDuplicateEntry) {

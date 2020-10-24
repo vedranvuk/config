@@ -10,9 +10,10 @@ import (
 )
 
 type Root struct {
-	PStruct Interface
-	PInt    Interface
-	Int     Interface
+	PPStruct Interface
+	PStruct  Interface
+	PInt     Interface
+	Int      Interface
 }
 
 type Child struct {
@@ -25,7 +26,13 @@ func TestInterface(t *testing.T) {
 
 	val := int(9001)
 
+	p := &Child{69}
+	pp := &p
+
 	data := &Root{
+		Interface{
+			Value: pp,
+		},
 		Interface{
 			Value: &Child{
 				42,
@@ -46,6 +53,7 @@ func TestInterface(t *testing.T) {
 	if err := WriteConfigFile(TestFilename, data); err != nil {
 		t.Fatal(err)
 	}
+
 	newdata := &Root{}
 
 	if err := ReadConfigFile(TestFilename, newdata); err != nil {
