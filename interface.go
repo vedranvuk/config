@@ -213,6 +213,8 @@ func registerInterfaces(root reflect.Value) error {
 			if err := registerInterfaceValue(fld); err != nil {
 				return err
 			}
+		case reflect.Invalid:
+			return nil
 		default:
 			continue
 		}

@@ -10,6 +10,7 @@ import (
 )
 
 type Root struct {
+	Nil      Interface
 	PPStruct Interface
 	PStruct  Interface
 	PInt     Interface
@@ -20,7 +21,7 @@ type Child struct {
 	Age int
 }
 
-func TestInterface(t *testing.T) {
+func TestReadWrite(t *testing.T) {
 
 	const TestFilename = "interface_test.json"
 
@@ -30,6 +31,10 @@ func TestInterface(t *testing.T) {
 	pp := &p
 
 	data := &Root{
+		Interface{
+			Value: nil,
+		},
+
 		Interface{
 			Value: pp,
 		},
