@@ -175,42 +175,43 @@ func initializeInterfaceField(fld reflect.Value, updated *bool) error {
 //
 // Returns an error if one occurs.
 func RegisterInterfaces(config interface{}) error {
-
 	if config == nil {
 		return nil
 	}
-
 	v := reflect.Indirect(reflect.ValueOf(config))
 	if !v.IsValid() || v.Kind() != reflect.Struct {
 		return ErrInvalidParam
 	}
-
 	return registerInterfaces(v)
 }
 
-// registerInterfaces is the implementation of RegisterInterfaceTypes.
-func registerInterfaces(root reflect.Value) error {
+// registerInterfaces is the implementation of RegisterInterfaces.
+func registerInterfaces(v reflect.Value) error {
+
+	if !v.IsValid() || v.Kind() != reflect.Struct {
+		return nil
+	}
 
 	var fld reflect.Value
-	for i := 0; i < root.NumField(); i++ {
-		fld = reflect.Indirect(root.Field(i))
+	for i := 0; i < v.NumField(); i++ {
+		fld = reflect.Indirect(v.Field(i))
 
 		switch fld.Kind() {
 		case reflect.Array, reflect.Slice:
 			for i := 0; i < fld.Len(); i++ {
-				if err := registerInterfaceValue(fld.Index(i)); err != nil {
+				if err := registerInterface(fld.Index(i)); err != nil {
 					return err
 				}
 			}
 		case reflect.Map:
 			iter := fld.MapRange()
 			for iter.Next() {
-				if err := registerInterfaceValue(fld.Index(i)); err != nil {
+				if err := registerInterface(fld.Index(i)); err != nil {
 					return err
 				}
 			}
 		case reflect.Struct:
-			if err := registerInterfaceValue(fld); err != nil {
+			if err := registerInterface(fld); err != nil {
 				return err
 			}
 		case reflect.Invalid:
@@ -223,24 +224,25 @@ func registerInterfaces(root reflect.Value) error {
 	return nil
 }
 
-// registerInterfaceValue registers a type in a config struct field.
-func registerInterfaceValue(fld reflect.Value) error {
+// registerInterface registers the type of value in a "Value" field of field v.
+// If v is not a struct control is passed back to registerInterfaces.
+func registerInterface(v reflect.Value) error {
 
-	if fld.Type() != interfaceType {
-		return registerInterfaces(fld)
+	if v.Type() != interfaceType {
+		return registerInterfaces(v)
 	}
 
-	val := fld.FieldByName("Value")
+	val := v.FieldByName("Value")
 	if !val.Elem().IsValid() {
 		return nil
 	}
 
-	if fld.FieldByName("Type").String() != "" {
+	if v.FieldByName("Type").String() != "" {
 		return nil
 	}
 
 	typename := typeregistry.GetLongTypeName(val.Interface())
-	fld.FieldByName("Type").SetString(typename)
+	v.FieldByName("Type").SetString(typename)
 
 	if err := registry.RegisterNamed(typename, val.Interface()); err != nil {
 		// Skip duplicate registration errors;
