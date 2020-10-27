@@ -124,8 +124,7 @@ func initializeInterfaces(root reflect.Value, updated *bool) error {
 	return nil
 }
 
-// initializeInterface initializes an Interface type in a config struct
-// field.
+// initializeInterface initializes an Interface type in a config struct field.
 func initializeInterface(fld reflect.Value, updated *bool) error {
 
 	for fld.Kind() == reflect.Ptr {
@@ -257,6 +256,9 @@ func registerInterface(v reflect.Value) error {
 
 	return nil
 }
+
+// RegisteredTypeNames returns a slice of registered type names with config.
+func RegisteredTypeNames() []string { return registry.RegisteredNames() }
 
 var (
 	// registry is the Interface type registry.

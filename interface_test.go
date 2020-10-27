@@ -16,6 +16,7 @@ type Root struct {
 	PInt     Interface
 	Int      Interface
 	IntP     *Interface
+	IntPN    *Interface
 }
 
 type Child struct {
@@ -53,6 +54,7 @@ func TestReadWrite(t *testing.T) {
 		&Interface{
 			Value: 1337,
 		},
+		nil,
 	}
 
 	defer func() {
