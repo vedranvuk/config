@@ -99,19 +99,19 @@ func initializeInterfaces(root reflect.Value, updated *bool) error {
 		switch fld.Kind() {
 		case reflect.Array, reflect.Slice:
 			for i := 0; i < fld.Len(); i++ {
-				if err := initializeInterfaceField(fld.Index(i), updated); err != nil {
+				if err := initializeInterface(fld.Index(i), updated); err != nil {
 					return err
 				}
 			}
 		case reflect.Map:
 			iter := fld.MapRange()
 			for iter.Next() {
-				if err := initializeInterfaceField(iter.Value(), updated); err != nil {
+				if err := initializeInterface(iter.Value(), updated); err != nil {
 					return err
 				}
 			}
 		case reflect.Struct:
-			if err := initializeInterfaceField(fld, updated); err != nil {
+			if err := initializeInterface(fld, updated); err != nil {
 				return err
 			}
 
@@ -124,9 +124,9 @@ func initializeInterfaces(root reflect.Value, updated *bool) error {
 	return nil
 }
 
-// initializeInterfaceField initializes an Interface type in a config struct
+// initializeInterface initializes an Interface type in a config struct
 // field.
-func initializeInterfaceField(fld reflect.Value, updated *bool) error {
+func initializeInterface(fld reflect.Value, updated *bool) error {
 
 	for fld.Kind() == reflect.Ptr {
 		fld = reflect.Indirect(fld)
@@ -182,7 +182,7 @@ func RegisterInterfaces(config interface{}) error {
 	if !v.IsValid() || v.Kind() != reflect.Struct {
 		return ErrInvalidParam
 	}
-	return registerInterfaces(v)
+	return registerInterface(v)
 }
 
 // registerInterfaces is the implementation of RegisterInterfaces.
@@ -227,6 +227,8 @@ func registerInterfaces(v reflect.Value) error {
 // registerInterface registers the type of value in a "Value" field of field v.
 // If v is not a struct control is passed back to registerInterfaces.
 func registerInterface(v reflect.Value) error {
+
+	v = reflect.Indirect(v)
 
 	if v.Type() != interfaceType {
 		return registerInterfaces(v)

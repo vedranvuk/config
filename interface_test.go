@@ -15,6 +15,7 @@ type Root struct {
 	PStruct  Interface
 	PInt     Interface
 	Int      Interface
+	IntP     *Interface
 }
 
 type Child struct {
@@ -47,6 +48,9 @@ func TestReadWrite(t *testing.T) {
 			Value: &val,
 		},
 		Interface{
+			Value: 1337,
+		},
+		&Interface{
 			Value: 1337,
 		},
 	}
