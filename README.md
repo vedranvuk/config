@@ -169,72 +169,106 @@ func main() {
 
 ## Sanitizer
 
-Sanitizer helps with field defaulting and value range enforcement. It uses struct tags to achieve it.
+Sanitizer functions use struct field tags to set defaults, enforce value
+ranges or values from a set on non-compound type fields and fields implementing 
+TextUnmarshaler.
 
-It recognizes following tag and its' keys:
+Keys are parsed from a `"config"` struct tag.
 
-```go
-const (
-	// ConfigTag is the name of the struct field tag read by this package.
-	ConfigTag = "config"
+There are few utility functions provided but the main two are Default and Limit.
 
-	// NilKey is a tag that specifies the value for the field to be interpreted
-	// as nil/empty for non-pointer field value types.
-	NilKey = "nil"
-	// RangeKey is a tag that defines the range of values for the field.
-	RangeKey = "range"
-	// DefaultKey is a tag that defines the default value for the field.
-	DefaultKey = "default"
-	// OmitEmptyKey is a LoadActionTag and SaveActionTag value that specifies
-	// that the value should be ommitted when saving the field to configuration
-	// file if the field value is nil and/or not modified in the field when
-	// there is no coresponding value in the config file being loaded.
-	OmitEmptyKey = "omitempty"
-)
-```
+### Default
 
-The API consists of the following:
-
-```go
-// SetDefaults takes a pointer to a config struct, traverses all of its fields
-// at any level if there are embedded structs with config tags, sets their
-// default field values according to tags and, if any errors or warnings
-// occured returns an ErrParseWarning containing errors in its' Extra field.
+```Go
+// Default takes a pointer to a config struct and recursively traverses
+// possibly nested fields with config tags then sets their field values
+// to values defined under default key if their values are zero of their type
+// or match the value defined under nil key.
+// e.g. nil for *int, 0 for int, or "" for strings.
 //
-// If all is specified all fields are reset to defaults, otherwise only nil
-// fields or fields whose values equal nil value as defined in the field tag
-// are reset.
+// If reset is specified all fields with defined defaults are reset, regardless
+// if they have already been initialized to non-nil values or their value has
+// since been changed.
 //
-// ErrParseWarning is returned if any of the following conditions occur:
+// If any errors or warnings occured it returns an ErrParseWarning of type
+// *errorex.ErrorEx that contains all warnings is its' Extras field.
+// It is returned under following conditions:
 //
 // If a field has no tag defined an ErrNoTag is appended to Extras.
-// If a field has no default defined an ErrNoDefault is appended to Extras.
+// If a field has no default value an ErrNoDefault is appended to Extras.
 // If a field has an incompatible/invalid default value defined an
 // ErrInvalidDefault is appended to Extras.
 //
 // Any other errors signify a no-op and a failure.
-SetDefaults(config interface{}, all bool) error
+Default(config interface{}, reset bool) error
+```
 
-// Sanitize enforces defined ranges on fields that exceed them at any depth of
-// the specified config, which must be a pointer to a struct, by either
-// clamping them to exceeded end value if clamp is true or by resetting them to
-// default value if clamp is false and default value is specified or if that
-// fails setting them to zero value of that field type.
+#### Example
+
+```Go
+type Example struct {
+	Name  string  `config:"default=foo"`
+	PName *string `config:"default=foo"`
+	Age   int     `config:"default=42"`
+	PAge  int     `config:"default=42"`
+	Ping  int     `config:"nil=10;default=30"`
+	Pong  int     `config:"nil=10;default=30"`
+}
+p := &Example{Ping: 10, Pong: 20}
+if err := Default(p, false); err != nil {
+	fmt.Printf("%#v\n", err.Error())
+}
+fmt.Printf("Name:%s PName:%s, Age:%d PAge:%d Ping:%d Pong:%d\n", p.Name, *p.PName, p.Age, p.PAge, p.Ping, p.Pong)
+// Output: Name:foo PName:foo, Age:42 PAge:42 Ping:30 Pong:20
+```
+
+### Limit
+
+```Go
+// Limit takes a pointer to a config struct and recursively traverses
+// possibly nested fields with config tags then if clamp was specified and
+// their values are outside of defined range or set, sets their field values
+// to values within the set or range, otherwise it just generates a warning.
+// e.g. range=1;2;3 range=foo;bar range=0:100
 //
-// Sanitize supports enforcing choices and ranges.
+// If clamp is specified fields with values outside of defined ranges are set
+// to lowest or highest value defined, depending on boundary they exceed.
+// If the value is not within the set a default operation is applied to the
+// field.
 //
-// Choices (value1,value2,valueN):
-//  a,b,c
-//
-// Ranges (min:max) (up to and including specified min or max):
-//  0:      (min:+infinity)
-//  :100    (-infinity:max)
-//  0:100   (min:max)
-//
+// Limit supports enforcing sets and ranges and precognizes them as follows:
+// Choices are strings separated by a ",", e.g.: 1,2,3 foo,bar,baz
+// Ranges are two values separated by a ":", e.g.: 0: :100 0:100 or :
+// Both range boundaries are optional, although that defeats the purpose.
 // Supported kinds are String, Ints, Uints.
 //
-// If an error occurs it is returned.
-Sanitize(config interface{}, clamp bool) error
+// If any errors or warnings occured it returns an ErrParseWarning of type
+// *errorex.ErrorEx that contains all warnings is its' Extras field.
+// It is returned under following conditions:
+//
+// If a field has no tag defined an ErrNoTag is appended to Extras.
+// If a field has no range value an ErrNoRange is appended to Extras.
+// If a field has an incompatible/invalid range value defined an
+// ErrInvalidRange is appended to Extras.
+//
+// Any other errors signify a no-op and a failure.
+Limit(config interface{}, clamp bool) error
+```
+
+#### Example 
+
+```Go
+	type Example struct {
+		Name string `config:"range=foo,bar,baz;default=foobar"`
+		Age  int    `config:"range=7:77;default=42"`
+	}
+	p := &Example{}
+	if err := Limit(p, true); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("Name:%s Age:%d\n", p.Name, p.Age)
+	// Output: Name:foobar Age:7
+
 ```
 
 ## Utilities
