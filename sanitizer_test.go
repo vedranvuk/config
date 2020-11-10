@@ -34,11 +34,16 @@ func TestSetDefaults(t *testing.T) {
 func TestSetDefaultsPtr(t *testing.T) {
 
 	type Test struct {
-		Name   *string `config:"default=foo"`
-		Age    *int    `config:"nil=-1;default=42"`
-		Height *int    `config:"default=190"`
-		Weight *int    `config:"default=80"`
-		Income *int    `config:"default=50000"`
+		Name    *string  `config:"default=foo"`
+		Age     *int     `config:"nil=-1;default=42"`
+		Height  *int     `config:"default=190"`
+		Weight  *int     `config:"default=80"`
+		Income  *int     `config:"default=50000"`
+		PName   **string `config:"default=foo"`
+		PAge    **int    `config:"nil=-1;default=42"`
+		PHeight **int    `config:"default=190"`
+		PWeight **int    `config:"default=80"`
+		PIncome **int    `config:"default=50000"`
 	}
 
 	test := &Test{}
@@ -56,6 +61,10 @@ func TestSetDefaultsPtr(t *testing.T) {
 	)
 
 	if *test.Name != name || *test.Age != age || *test.Height != height || *test.Weight != weight || *test.Income != income {
+		t.Fatal("TestSetDefaultsPtr failed.")
+	}
+
+	if **test.PName != name || **test.PAge != age || **test.PHeight != height || **test.PWeight != weight || **test.PIncome != income {
 		t.Fatal("TestSetDefaultsPtr failed.")
 	}
 }
@@ -90,15 +99,16 @@ func TestSanitize(t *testing.T) {
 		Age      int    `config:"range=0:150"`
 		Height   int    `config:"range=:200"`
 		Weight   int    `config:"range=10:"`
+		Bogus    *int   `config:"range=0:100"`
 	}
 
-	test := &Test{"INVALID", "dope", "INVALID", 160, 210, 5}
+	test := &Test{"INVALID", "dope", "INVALID", 160, 210, 5, nil}
 
 	if err := Sanitize(test, true); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(test, &Test{"bar", "dope", "", 150, 200, 10}) {
+	if !reflect.DeepEqual(test, &Test{"bar", "dope", "", 150, 200, 10, nil}) {
 		t.Fatal("TestSanitize failed.")
 	}
 }

@@ -75,27 +75,22 @@ func RegisterTypeByName(name string, value interface{}) error {
 //
 // InitializeInterfaces exclusively modifies contained Interface types.
 func InitializeInterfaces(config interface{}) (bool, error) {
-
 	if config == nil {
 		return false, nil
 	}
-
 	v := reflect.Indirect(reflect.ValueOf(config))
 	if !v.IsValid() || v.Kind() != reflect.Struct {
 		return false, ErrInvalidParam
 	}
-
 	updated := false
 	return updated, initializeInterfaces(v, &updated)
 }
 
 // initializeInterfaces is the implementation of InterfaceSetup.
 func initializeInterfaces(root reflect.Value, updated *bool) error {
-
 	var fld reflect.Value
 	for i := 0; i < root.NumField(); i++ {
 		fld = reflect.Indirect(root.Field(i))
-
 		switch fld.Kind() {
 		case reflect.Array, reflect.Slice:
 			for i := 0; i < fld.Len(); i++ {
@@ -114,34 +109,27 @@ func initializeInterfaces(root reflect.Value, updated *bool) error {
 			if err := initializeInterface(fld, updated); err != nil {
 				return err
 			}
-
 		default:
 			continue
 		}
-
 	}
-
 	return nil
 }
 
 // initializeInterface initializes an Interface type in a config struct field.
 func initializeInterface(fld reflect.Value, updated *bool) error {
-
 	for fld.Kind() == reflect.Ptr {
 		fld = reflect.Indirect(fld)
 	}
-
 	if fld.Kind() != reflect.Struct {
 		return nil
 	}
-
 	if fld.Type() != interfaceType {
 		if err := initializeInterfaces(fld, updated); err != nil {
 			return err
 		}
 		return nil
 	}
-
 	tn := fld.FieldByName("Type").String()
 	if tn == "" {
 		return nil
@@ -150,15 +138,12 @@ func initializeInterface(fld reflect.Value, updated *bool) error {
 	if err != nil {
 		return err
 	}
-
 	if nvt.Kind() == reflect.Ptr {
 		fld.FieldByName("Value").Set(reflect.New(nvt.Elem()))
 	} else {
 		fld.FieldByName("Value").Set(reflect.New(nvt).Elem())
 	}
-
 	*updated = true
-
 	return nil
 }
 
@@ -186,15 +171,12 @@ func RegisterInterfaces(config interface{}) error {
 
 // registerInterfaces is the implementation of RegisterInterfaces.
 func registerInterfaces(v reflect.Value) error {
-
 	if !v.IsValid() || v.Kind() != reflect.Struct {
 		return nil
 	}
-
 	var fld reflect.Value
 	for i := 0; i < v.NumField(); i++ {
 		fld = reflect.Indirect(v.Field(i))
-
 		switch fld.Kind() {
 		case reflect.Array, reflect.Slice:
 			for i := 0; i < fld.Len(); i++ {
@@ -219,32 +201,25 @@ func registerInterfaces(v reflect.Value) error {
 			continue
 		}
 	}
-
 	return nil
 }
 
 // registerInterface registers the type of value in a "Value" field of field v.
 // If v is not a struct control is passed back to registerInterfaces.
 func registerInterface(v reflect.Value) error {
-
 	v = reflect.Indirect(v)
-
 	if v.Type() != interfaceType {
 		return registerInterfaces(v)
 	}
-
 	val := v.FieldByName("Value")
 	if !val.Elem().IsValid() {
 		return nil
 	}
-
 	if v.FieldByName("Type").String() != "" {
 		return nil
 	}
-
 	typename := typeregistry.GetLongTypeName(val.Interface())
 	v.FieldByName("Type").SetString(typename)
-
 	if err := registry.RegisterNamed(typename, val.Interface()); err != nil {
 		// Skip duplicate registration errors;
 		// Config could be loaded multiple times at runtime.
@@ -253,7 +228,6 @@ func registerInterface(v reflect.Value) error {
 		}
 		return err
 	}
-
 	return nil
 }
 
