@@ -167,35 +167,15 @@ func Limit(config interface{}, clamp bool) error {
 	return nil
 }
 
-// tagmap maps tag keys to tag values.
-type tagmap map[string]string
-
-// parseTagmap returns a possibly empty tagmap parsed from the config tag
-// key/value pairs.
-func parseTagmap(tag string) tagmap {
-	m := make(tagmap)
-	for _, s := range strings.Split(tag, ";") {
-		if s == "" {
-			continue
-		}
-		kv := strings.Split(s, "=")
-		if len(kv) != 2 {
-			continue
-		}
-		m[kv[0]] = kv[1]
-	}
-	return m
-}
-
 func traverse(v reflect.Value, name string, defaults, limits, reset, clamp bool, tags tagmap, warnings *errorex.ErrorEx) {
 	switch v.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < v.Len(); i++ {
-			traverse(v.Index(i), name, defaults, limits, reset, clamp, tags, warnings)
+			traverse(reflect.Indirect(v.Index(i)), name, defaults, limits, reset, clamp, tags, warnings)
 		}
 	case reflect.Map:
 		for iter := v.MapRange(); iter.Next(); {
-			traverse(iter.Value(), name, defaults, limits, reset, clamp, tags, warnings)
+			traverse(reflect.Indirect(iter.Value()), name, defaults, limits, reset, clamp, tags, warnings)
 		}
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
@@ -279,7 +259,7 @@ func setLimits(v reflect.Value, name string, tags tagmap, clamp bool, warnings *
 		if matched && !clamp {
 			return
 		}
-		setDefaults(v, name, tags, false, warnings)
+		setDefaults(v, name, tags, true, warnings)
 		return
 	}
 	// Process range.
@@ -333,4 +313,24 @@ func setLimits(v reflect.Value, name string, tags tagmap, clamp bool, warnings *
 			}
 		}
 	}
+}
+
+// tagmap maps tag keys to tag values.
+type tagmap map[string]string
+
+// parseTagmap returns a possibly empty tagmap parsed from the config tag
+// key/value pairs.
+func parseTagmap(tag string) tagmap {
+	m := make(tagmap)
+	for _, s := range strings.Split(tag, ";") {
+		if s == "" {
+			continue
+		}
+		kv := strings.Split(s, "=")
+		if len(kv) != 2 {
+			continue
+		}
+		m[kv[0]] = kv[1]
+	}
+	return m
 }
