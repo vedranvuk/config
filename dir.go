@@ -51,11 +51,15 @@ func NewDir(prefix string) (*Dir, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Dir{
+	p := &Dir{
 		prefix: prefix,
 		sysdir: filepath.Join(sys, prefix),
 		usrdir: filepath.Join(usr, prefix),
-	}, nil
+	}
+	if err := os.MkdirAll(p.usrdir, 0755); err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
 // LoadSystemConfig loads the config specified by name from the system config
@@ -177,7 +181,7 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 // enforceFilePath creates directories along the assumed path to a file
 // specified by filename or returns an error.
 func enforceFilePath(filename string) error {
-	return os.MkdirAll(filepath.Dir(filename), os.ModePerm)
+	return os.MkdirAll(filepath.Dir(filename), 0755)
 }
 
 // SaveSystemConfig saves a configuration file defined by name to the system
