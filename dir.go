@@ -32,31 +32,38 @@ var (
 // being accessed.
 //
 type Dir struct {
-	// prefix is the configuration prefix.
-	prefix string
+	prefix string // prefix is the configuration prefix.
+	sysdir string // sysdir is the system location of Dir.
+	usrdir string // usrdir is the user location of Dir.
 }
 
-// NewDir returns a new Dir with the given prefix.
+// NewDir returns a new Dir with the given prefix or an error.
 //
 // Prefix represents the name of the directory to be read/written in any of
 // locations Dir recognizes. It can be a directory name or a path in case of
 // which it will be rooted at all configuration locations.
-//
-func NewDir(prefix string) *Dir { return &Dir{prefix} }
+func NewDir(prefix string) (*Dir, error) {
+	sys, err := GetSystemConfigPath()
+	if err != nil {
+		return nil, err
+	}
+	usr, err := GetUserConfigPath()
+	if err != nil {
+		return nil, err
+	}
+	return &Dir{
+		prefix: prefix,
+		sysdir: filepath.Join(sys, prefix),
+		usrdir: filepath.Join(usr, prefix),
+	}, nil
+}
 
 // LoadSystemConfig loads the config specified by name from the system config
 // directory. See LoadConfig for details.
 //
 // If an error occurs it is returned.
 func (d *Dir) LoadSystemConfig(name string, out interface{}) error {
-
-	path, err := GetSystemConfigPath()
-
-	if err != nil {
-		return err
-	}
-
-	return ReadConfigFile(filepath.Join(path, d.prefix, name), out)
+	return ReadConfigFile(filepath.Join(d.sysdir, name), out)
 }
 
 // LoadUserConfig loads the config specified by name from the user config
@@ -64,14 +71,7 @@ func (d *Dir) LoadSystemConfig(name string, out interface{}) error {
 //
 // If an error occurs it is returned.
 func (d *Dir) LoadUserConfig(name string, out interface{}) error {
-
-	path, err := GetUserConfigPath()
-
-	if err != nil {
-		return err
-	}
-
-	return ReadConfigFile(filepath.Join(path, d.prefix, name), out)
+	return ReadConfigFile(filepath.Join(d.usrdir, name), out)
 }
 
 // LoadProgramConfig loads the config specified by name from the program
@@ -188,18 +188,10 @@ func enforceFilePath(filename string) error {
 //
 // If an error occurs it is returned.
 func (d *Dir) SaveSystemConfig(name string, in interface{}) error {
-
-	path, err := GetSystemConfigPath()
-
-	if err != nil {
-		return err
-	}
-
-	path = filepath.Join(path, d.prefix, name)
+	path := filepath.Join(d.sysdir, name)
 	if err := enforceFilePath(path); err != nil {
 		return err
 	}
-
 	return WriteConfigFile(path, in)
 }
 
@@ -209,18 +201,10 @@ func (d *Dir) SaveSystemConfig(name string, in interface{}) error {
 //
 // If an error occurs it is returned.
 func (d *Dir) SaveUserConfig(name string, in interface{}) error {
-
-	path, err := GetUserConfigPath()
-
-	if err != nil {
-		return err
-	}
-
-	path = filepath.Join(path, d.prefix, name)
+	path := filepath.Join(d.usrdir, name)
 	if err := enforceFilePath(path); err != nil {
 		return err
 	}
-
 	return WriteConfigFile(path, in)
 }
 
@@ -235,40 +219,24 @@ func (d *Dir) SaveUserConfig(name string, in interface{}) error {
 //
 // If an error occurs it is returned.
 func (d *Dir) SaveProgramConfig(name string, in interface{}) error {
-
 	if runtime.GOOS != "windows" {
 		return ErrProgramDirNotSupported
 	}
-
-	path := filepath.Join(GetProgramConfigPath(), d.prefix, name)
-
+	path := filepath.Join(GetProgramConfigPath(), name)
 	if err := enforceFilePath(path); err != nil {
 		return nil
 	}
-
 	return WriteConfigFile(path, in)
 }
 
-// RemoveAll removes Dir's configuration directory from all configuration
-// locations.
-func (d *Dir) RemoveAll() error {
-	return nil
-}
+// User returns the user configuration path for Dir.
+func (d *Dir) User() string { return d.usrdir }
 
-// SystemPath returns the system configuration path of Dir.
-func (d *Dir) SystemPath() (string, error) {
-	p, err := GetSystemConfigPath()
-	if err != nil {
-		return "", nil
-	}
-	return filepath.Join(p, d.prefix), nil
-}
+// System returns the system configuration path of Dir.
+func (d *Dir) System() string { return d.sysdir }
 
-// UserPath returns the user configuration path for Dir.
-func (d *Dir) UserPath() (string, error) {
-	p, err := GetUserConfigPath()
-	if err != nil {
-		return "", nil
-	}
-	return filepath.Join(p, d.prefix), nil
+// RemoveUser removes Dir's configuration directory from user configuration
+// location.
+func (d *Dir) RemoveUser() error {
+	return os.RemoveAll(d.usrdir)
 }

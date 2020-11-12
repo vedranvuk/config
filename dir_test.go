@@ -21,7 +21,10 @@ func TestDirShallow(t *testing.T) {
 	configdir := "configtest"
 	configname := "config.json"
 
-	dir := NewDir(configdir)
+	dir, err := NewDir(configdir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	out := &Config{"Foo", 42}
 	in := &Config{}
 
@@ -56,7 +59,10 @@ func TestDirDeep(t *testing.T) {
 	configdir := "configtest/child1/child2/child3"
 	configname := "deep1/deep2/deep3/config.xml"
 
-	dir := NewDir(configdir)
+	dir, err := NewDir(configdir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	out := &Config{"Foo", 42}
 	in := &Config{}
 
