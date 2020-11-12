@@ -116,11 +116,8 @@ func (d *Dir) LoadProgramConfig(name string, out interface{}) error {
 // configuration directory.
 //
 func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error) {
-
 	if override {
-
 		loaded := false
-
 		if err = d.LoadSystemConfig(name, out); err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
 				return err
@@ -128,7 +125,6 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 		} else {
 			loaded = true
 		}
-
 		if err = d.LoadUserConfig(name, out); err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
 				return err
@@ -136,7 +132,6 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 		} else {
 			loaded = true
 		}
-
 		if err = d.LoadProgramConfig(name, out); err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
 				if !errors.Is(err, ErrProgramDirNotSupported) {
@@ -146,16 +141,12 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 		} else {
 			loaded = true
 		}
-
 		if !loaded {
 			return ErrNoConfigLoaded
 		}
-
 		return nil
 	}
-
 	loaded := false
-
 	if err = d.LoadProgramConfig(name, out); err != nil {
 		if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, ErrProgramDirNotSupported) {
 			return err
@@ -163,7 +154,6 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 	} else {
 		loaded = true
 	}
-
 	if err = d.LoadUserConfig(name, out); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			return err
@@ -171,7 +161,6 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 	} else {
 		loaded = true
 	}
-
 	if err = d.LoadSystemConfig(name, out); err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			return err
@@ -179,11 +168,9 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 	} else {
 		loaded = true
 	}
-
 	if !loaded {
 		return ErrNoConfigLoaded
 	}
-
 	return nil
 }
 
@@ -266,4 +253,22 @@ func (d *Dir) SaveProgramConfig(name string, in interface{}) error {
 // locations.
 func (d *Dir) RemoveAll() error {
 	return nil
+}
+
+// SystemPath returns the system configuration path of Dir.
+func (d *Dir) SystemPath() (string, error) {
+	p, err := GetSystemConfigPath()
+	if err != nil {
+		return "", nil
+	}
+	return filepath.Join(p, d.prefix), nil
+}
+
+// UserPath returns the user configuration path for Dir.
+func (d *Dir) UserPath() (string, error) {
+	p, err := GetUserConfigPath()
+	if err != nil {
+		return "", nil
+	}
+	return filepath.Join(p, d.prefix), nil
 }
