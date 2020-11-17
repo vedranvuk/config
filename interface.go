@@ -30,15 +30,11 @@ import (
 // of correct type prior to unmarshaling.
 //
 type Interface struct {
-
 	// Type holds the name of the type contained in Value.
-	// It should not be modified by user as it serves to store the name of type
-	// contained in Value and gets overwritten on Interface marshalling.
+	// It should not be modified by user.
+	// It is populated when marshaling the Value and read when unmarshaling it.
 	Type string
-
-	// Value is the value being wrapped. It's type is registered with type
-	// registry and type name stored to Type when marshaling and preallocated
-	// from type registry by addressing it using Type when unmarshaling.
+	// Value is the value being wrapped.
 	Value interface{}
 }
 

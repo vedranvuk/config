@@ -39,21 +39,17 @@ var (
 //
 // If an error occurs it is returned.
 func WriteConfigFile(filename string, config interface{}) error {
-
 	if err := RegisterInterfaces(config); err != nil {
 		return err
 	}
-
 	c, err := codec.Get(ext(filename))
 	if err != nil {
 		return err
 	}
-
 	data, err := c.Encode(config)
 	if err != nil {
 		return err
 	}
-
 	return ioutil.WriteFile(filename, data, 0644)
 }
 
@@ -76,32 +72,26 @@ func WriteConfigFile(filename string, config interface{}) error {
 // config must have been registered manually using RegisterType or
 // RegisterTypeByName.
 func ReadConfigFile(filename string, config interface{}) error {
-
 	c, err := codec.Get(ext(filename))
 	if err != nil {
 		return err
 	}
-
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-
 	if err := c.Decode(data, config); err != nil {
 		return err
 	}
-
 	needsreload, err := InitializeInterfaces(config)
 	if err != nil {
 		return err
 	}
-
 	if needsreload {
 		if err := c.Decode(data, config); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -127,7 +117,6 @@ func ext(filename string) (s string) {
 // windows:            "%ALLUSERSPROFILE%"
 //
 func GetSystemConfigPath() (path string, err error) {
-
 	switch runtime.GOOS {
 	case "darwin":
 		path = "/private/etc"
@@ -141,11 +130,9 @@ func GetSystemConfigPath() (path string, err error) {
 	default:
 		return "", ErrUnsupportedOS.WrapArgs(runtime.GOOS)
 	}
-
 	if err != nil {
 		return "", err
 	}
-
 	return
 }
 
@@ -158,7 +145,6 @@ func GetSystemConfigPath() (path string, err error) {
 // windows:            "%USERPROFILE%"
 //
 func GetUserConfigPath() (path string, err error) {
-
 	switch runtime.GOOS {
 	case "darwin":
 		path = filepath.Join(os.ExpandEnv("$HOME"), ".config")
@@ -172,11 +158,9 @@ func GetUserConfigPath() (path string, err error) {
 	default:
 		return "", ErrUnsupportedOS.WrapArgs(runtime.GOOS)
 	}
-
 	if err != nil {
 		return "", err
 	}
-
 	return
 }
 
