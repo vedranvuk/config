@@ -40,10 +40,6 @@ var (
 	ErrInvalidDefault = ErrConfig.WrapFormat("'%s' invalid default")
 	// ErrInvalidNil help.
 	ErrInvalidNil = ErrConfig.WrapFormat("'%s' invalid default")
-
-	// ErrInvalidParam is returned when an invalid parameter is passed to a
-	// function.
-	ErrInvalidParam = ErrConfig.Wrap("invalid parameter")
 )
 
 const (

@@ -5,81 +5,110 @@
 package config
 
 import (
-	"os"
+	"reflect"
 	"testing"
 )
 
-type Root struct {
-	Nil      Interface
-	PPStruct Interface
-	PStruct  Interface
-	PInt     Interface
-	Int      Interface
-	IntP     *Interface
-	IntPN    *Interface
-}
-
-type Child struct {
-	Age int
-}
-
-func TestReadWrite(t *testing.T) {
-
-	const TestFilename = "interface_test.json"
-
-	val := int(9001)
-
-	p := &Child{69}
-	pp := &p
-
-	data := &Root{
-		Interface{
-			Value: nil,
-		},
-
-		Interface{
-			Value: pp,
-		},
-		Interface{
-			Value: &Child{
-				42,
-			},
-		},
-		Interface{
-			Value: &val,
-		},
-		Interface{
-			Value: 1337,
-		},
-		&Interface{
-			Value: 1337,
-		},
-		nil,
+func TestInterface(t *testing.T) {
+	type Container struct {
+		I Interface
 	}
-
-	defer func() {
-		os.Remove(TestFilename)
-	}()
-
-	if err := WriteConfigFile(TestFilename, data); err != nil {
+	type Data struct {
+		Name string
+		Age  int
+	}
+	data := Data{"foo", 42}
+	out := &Container{I: Interface{Value: data}}
+	if err := RegisterInterfaces(out); err != nil {
 		t.Fatal(err)
 	}
-
-	newdata := &Root{}
-
-	if err := ReadConfigFile(TestFilename, newdata); err != nil {
+	in := &Container{I: Interface{Type: out.I.Type}}
+	modified, err := InitializeInterfaces(in)
+	if err != nil {
 		t.Fatal(err)
 	}
+	if !modified {
+		t.Fatal("Failed initializing an Interface")
+	}
+	if reflect.TypeOf(out.I.Value) != reflect.TypeOf(in.I.Value) {
+		t.Fatal("Interface failed.")
+	}
+}
 
-	a := data.PStruct.Value.(*Child)
-	b := newdata.PStruct.Value.(*Child)
-	if a.Age != b.Age {
-		t.Fatal("TestInterface failed.")
+func TestInterfaceP(t *testing.T) {
+	type Container struct {
+		I Interface
 	}
-	if *data.PInt.Value.(*int) != *newdata.PInt.Value.(*int) {
-		t.Fatal("TestInterface failed.")
+	type Data struct {
+		Name string
+		Age  int
 	}
-	if data.Int.Value.(int) != int(newdata.Int.Value.(float64)) {
-		t.Fatal("TestInterface failed.")
+	data := &Data{"foo", 42}
+	out := &Container{I: Interface{Value: data}}
+	if err := RegisterInterfaces(out); err != nil {
+		t.Fatal(err)
+	}
+	in := &Container{I: Interface{Type: out.I.Type}}
+	modified, err := InitializeInterfaces(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !modified {
+		t.Fatal("Failed initializing an Interface")
+	}
+	if reflect.TypeOf(out.I.Value) != reflect.TypeOf(in.I.Value) {
+		t.Fatal("Interface failed.")
+	}
+}
+
+func TestPInterface(t *testing.T) {
+	type Container struct {
+		I *Interface
+	}
+	type Data struct {
+		Name string
+		Age  int
+	}
+	data := Data{"foo", 42}
+	out := &Container{I: &Interface{Value: data}}
+	if err := RegisterInterfaces(out); err != nil {
+		t.Fatal(err)
+	}
+	in := &Container{I: &Interface{Type: out.I.Type}}
+	modified, err := InitializeInterfaces(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !modified {
+		t.Fatal("Failed initializing an Interface")
+	}
+	if reflect.ValueOf(out.I.Value).Type().String() != reflect.ValueOf(in.I.Value).Type().String() {
+		t.Fatal("Interface failed.")
+	}
+}
+
+func TestPInterfaceP(t *testing.T) {
+	type Container struct {
+		I *Interface
+	}
+	type Data struct {
+		Name string
+		Age  int
+	}
+	data := &Data{"foo", 42}
+	out := &Container{I: &Interface{Value: data}}
+	if err := RegisterInterfaces(out); err != nil {
+		t.Fatal(err)
+	}
+	in := &Container{I: &Interface{Type: out.I.Type}}
+	modified, err := InitializeInterfaces(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !modified {
+		t.Fatal("Failed initializing an Interface")
+	}
+	if reflect.ValueOf(out.I.Value).Type().String() != reflect.ValueOf(in.I.Value).Type().String() {
+		t.Fatal("Interface failed.")
 	}
 }

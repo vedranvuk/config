@@ -17,37 +17,7 @@ import (
 	_ "github.com/vedranvuk/config/codec/xml"
 )
 
-func readwriteconfig(codec string) error {
-
-	type Config struct {
-		Name string
-		Age  int
-	}
-
-	fn := "testconfig." + codec
-
-	out := &Config{"Foo", 42}
-
-	if err := WriteConfigFile(fn, out); err != nil {
-		return err
-	}
-	defer os.Remove(fn)
-
-	in := &Config{}
-
-	if err := ReadConfigFile(fn, in); err != nil {
-		return err
-	}
-
-	if !reflect.DeepEqual(in, out) {
-		return errors.New("TestReadWriteConfig failed: in and out not equal")
-	}
-
-	return nil
-}
-
 func TestReadWriteConfigFile(t *testing.T) {
-
 	if err := readwriteconfig("json"); err != nil {
 		t.Fatal(err)
 	}
@@ -62,4 +32,25 @@ func TestReadWriteConfigFile(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+}
+
+func readwriteconfig(codec string) error {
+	type TestConfig struct {
+		Name string
+		Age  int
+	}
+	filename := "testconfig." + codec
+	out := &TestConfig{"Foo", 42}
+	if err := WriteConfigFile(filename, out); err != nil {
+		return err
+	}
+	defer os.Remove(filename)
+	in := &TestConfig{}
+	if err := ReadConfigFile(filename, in); err != nil {
+		return err
+	}
+	if !reflect.DeepEqual(in, out) {
+		return errors.New("TestReadWriteConfig failed: in and out not equal")
+	}
+	return nil
 }

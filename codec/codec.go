@@ -27,12 +27,6 @@ type Codec interface {
 	Decode([]byte, interface{}) error
 }
 
-// regmu is the filter registry mutex.
-var regmu = sync.Mutex{}
-
-// registry is the filter registry.
-var registry = map[string]Codec{}
-
 // Register registers a Config codec under the specified name.
 // It panics if the name is already registered.
 func Register(name string, codec Codec) {
@@ -57,3 +51,10 @@ func Get(name string) (Codec, error) {
 	regmu.Unlock()
 	return filter, nil
 }
+
+var (
+	// regmu is the codec registry mutex.
+	regmu = sync.Mutex{}
+	// registry is the codec registry.
+	registry = map[string]Codec{}
+)

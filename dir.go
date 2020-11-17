@@ -15,12 +15,10 @@ var (
 	// ErrNoConfigLoaded is returned by LoadConfig when no configs were loaded.
 	ErrNoConfigLoaded = ErrConfig.Wrap("no configuration files loaded")
 
-	// ErrProgramDirNotSupported is returned when trying to write or read from
+	// ErrProgramDir is returned when trying to write or read from
 	// a program directory on an platform that does not support it.
-	//
-	// It is returned by LoadProgramConfig on an OS that does not support
-	// loading configs from program directory and internally.
-	ErrProgramDirNotSupported = ErrConfig.Wrap("program directory configuration not supported on this os")
+	// i.e., NOT Windows.
+	ErrProgramDir = ErrConfig.Wrap("program directory configuration not supported on this os")
 )
 
 // Dir is a helper that represents a configuration directory in multiple
@@ -30,7 +28,6 @@ var (
 // A Dir takes a prefix which defines a subdirectory in either of configuration
 // locations. If prefix is a path it is rooted at either configuration location
 // being accessed.
-//
 type Dir struct {
 	prefix string // prefix is the configuration prefix.
 	sysdir string // sysdir is the system location of Dir.
@@ -86,7 +83,7 @@ func (d *Dir) LoadUserConfig(name string, out interface{}) error {
 // If an error occurs it is returned.
 func (d *Dir) LoadProgramConfig(name string, out interface{}) error {
 	if runtime.GOOS != "windows" {
-		return ErrProgramDirNotSupported
+		return ErrProgramDir
 	}
 	path := filepath.Join(GetProgramConfigPath(), name)
 	return ReadConfigFile(path, out)
@@ -138,7 +135,7 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 		}
 		if err = d.LoadProgramConfig(name, out); err != nil {
 			if !errors.Is(err, os.ErrNotExist) {
-				if !errors.Is(err, ErrProgramDirNotSupported) {
+				if !errors.Is(err, ErrProgramDir) {
 					return err
 				}
 			}
@@ -152,7 +149,7 @@ func (d *Dir) LoadConfig(name string, override bool, out interface{}) (err error
 	}
 	loaded := false
 	if err = d.LoadProgramConfig(name, out); err != nil {
-		if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, ErrProgramDirNotSupported) {
+		if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, ErrProgramDir) {
 			return err
 		}
 	} else {
@@ -224,7 +221,7 @@ func (d *Dir) SaveUserConfig(name string, in interface{}) error {
 // If an error occurs it is returned.
 func (d *Dir) SaveProgramConfig(name string, in interface{}) error {
 	if runtime.GOOS != "windows" {
-		return ErrProgramDirNotSupported
+		return ErrProgramDir
 	}
 	path := filepath.Join(GetProgramConfigPath(), name)
 	if err := enforceFilePath(path); err != nil {

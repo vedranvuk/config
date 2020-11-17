@@ -24,19 +24,18 @@ import (
 var (
 	// ErrConfig is the base error of config package.
 	ErrConfig = errorex.New("config")
+	// ErrInvalidParam is returned when an invalid parameter is passed to a
+	// function.
+	ErrInvalidParam = ErrConfig.Wrap("invalid parameter")
 
 	// ErrUnsupportedOS is returned by GetSystemConfigPath and
 	// GetUserConfigPath on an unsupported OS.
 	ErrUnsupportedOS = ErrConfig.WrapFormat("unsupported OS '%s'")
 )
 
-// WriteConfigFile writes specified config to a file specified by filename.
-//
-// Codec is selected from extension and must be registered.
-//
-// WriteConfigFile registers all found config.Interface types at any depth with
-// the type registry.
-//
+// WriteConfigFile writes config to a file specified by filename.
+// Codec is selected from filename extension and must be registered.
+// WriteConfigFile registers all Interface types in config at any depth.
 // If an error occurs it is returned.
 func WriteConfigFile(filename string, config interface{}) error {
 	if err := RegisterInterfaces(config); err != nil {
@@ -54,23 +53,22 @@ func WriteConfigFile(filename string, config interface{}) error {
 }
 
 // ReadConfigFile reads a configuration file specified by filename into
-// config which must be a non-nil pointer to a value compatible with config
-// being read.
+// config which must be a non-nil pointer to a value compatible with
+// configuration being read.
 //
-// Codec is selected from extension and must be registered.
+// Codec is selected from extension and must be registered by importing it in
+// the program or package.
 //
-// If an error occurs it is returned.
-//
-// ReadConfigFile decodes the loaded stream twice if any Interface structs are
-// detected at any level in config. This is required to replace returned
-// map[string]interface{} vars in contained interfaces with types at marshaling
-// time.
+// ReadConfigFile unmarshals the loaded stream twice if any Interface structs
+// are detected at any level in config whose Type field is not empty. First run
+// reads Interface.Type fields and initializes Interface.Value to zero values of
+// that type then unmarshals the config again to fill ethe Value fields.
 //
 // Types must be registered with the registry in order for Interfaces to be
-// loaded properly. If an instance of a type being read was not written to file
-// prior to this call using WriteConfigFile the type of the value specified by
-// config must have been registered manually using RegisterType or
-// RegisterTypeByName.
+// initialized properly. Types are registered automatically when using
+// WriteConfigFile and can be manually registered using RegisterType.
+//
+// If an error occurs it is returned.
 func ReadConfigFile(filename string, config interface{}) error {
 	c, err := codec.Get(ext(filename))
 	if err != nil {
@@ -87,12 +85,10 @@ func ReadConfigFile(filename string, config interface{}) error {
 	if err != nil {
 		return err
 	}
-	if needsreload {
-		if err := c.Decode(data, config); err != nil {
-			return err
-		}
+	if !needsreload {
+		return nil
 	}
-	return nil
+	return c.Decode(data, config)
 }
 
 // ext is a helper that extracts the extension from the filename, without the
@@ -108,14 +104,14 @@ func ext(filename string) (s string) {
 	return
 }
 
-// GetSystemConfigPath returns the path to the configuration directory named as
-// the defined prefix under a system-wide configuration directory that depends
-// on the underlying operating system and is defined as follows:
+// GetSystemConfigPath returns the path to the base system configuration
+// directory that depends on the running OS and is defined as follows:
 //
 // darwin:             "/private/etc"
-// linux, unix, et al: "/etc"
+// unix, linux et al:  "/etc"
 // windows:            "%ALLUSERSPROFILE%"
 //
+// If an unsupported OS is detected returns empty path and ErrUnsupportedOS.
 func GetSystemConfigPath() (path string, err error) {
 	switch runtime.GOOS {
 	case "darwin":
@@ -136,14 +132,14 @@ func GetSystemConfigPath() (path string, err error) {
 	return
 }
 
-// GetUserConfigPath returns the path to the configuration directory named as
-// the defined prefix under a user configuration directory that depends
-// on the underlying operating system and is defined as follows:
+// GetUserConfigPath returns the path to the base user configuration
+// directory that depends on the running OS and is defined as follows:
 //
 // darwin:             "$HOME"
-// linux, unix, et al: "$HOME"
+// unix, linux et al:  "$HOME"
 // windows:            "%USERPROFILE%"
 //
+// If an unsupported OS is detected returns empty path and ErrUnsupportedOS.
 func GetUserConfigPath() (path string, err error) {
 	switch runtime.GOOS {
 	case "darwin":
