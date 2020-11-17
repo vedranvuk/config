@@ -14,21 +14,13 @@ import (
 // Interface is a wrapper for marshalling interface values to and from abstract
 // data formats such as JSON that do not store type information by design.
 //
-// It uses a type registry to allocate interface values of correct type prior
-// to unmarshaling data to interface to avoid unmarshaling to generic
-// map[string]interface{} type.
+// It uses a type registry to allocate values of correct type into an interface
+// prior to unmarshaling data into it to avoid unmarshaling to generic
+// map[string]interface{} type for JSON, or similar for other packages.
 // User still needs to assert the correct Value type when accessing it.
 //
-// All instances of Interface use a single type registry that relies on
-// reflect.Type.String() to produce names of types contained in Value.
-// See https://pkg.go.dev/reflect?tab=doc#Type for a gotcha if unfamiliar.
-//
-// Any caveats that apply to used marshaling format apply to Interface as well.
-// For example, if using JSON its' rules still apply; if Value holds a struct
-// value during registration instead of a pointer to a struct Codec will
-// unmarshal map[string]interface{} into Value even with preallocated value
-// of correct type prior to unmarshaling.
-//
+// Interfaces use a single config package-wide type registry that generates
+// custom names for types contained in Value.
 type Interface struct {
 	// Type holds the name of the type contained in Value.
 	// It should not be modified by user.
