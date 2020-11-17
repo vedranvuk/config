@@ -30,18 +30,9 @@ type Interface struct {
 	Value interface{}
 }
 
-// RegisterType pre-registers a type of specified value with the registry.
+// RegisterType registers a type of specified value with the config registry.
 func RegisterType(value interface{}) error {
 	if err := registry.Register(value); err != nil {
-		return err
-	}
-	return nil
-}
-
-// RegisterTypeByName pre-registers a type of specified value with the registry
-// by name.
-func RegisterTypeByName(name string, value interface{}) error {
-	if err := registry.RegisterNamed(name, value); err != nil {
 		return err
 	}
 	return nil
