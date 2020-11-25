@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -100,6 +101,29 @@ func TestRecursive(t *testing.T) {
 		t.Fatal(err)
 	}
 	show(p)
+}
+
+type interfaceContainer struct {
+	Iface  Interface
+	IfaceP *Interface
+}
+
+func TestSanitizeInterfaceValue(t *testing.T) {
+	p1 := interfaceContainer{
+		Iface:  Interface{Value: &sanitizeChild{}},
+		IfaceP: &Interface{Value: &sanitizeChild{}},
+	}
+	if err := Default(&p1, false); err != nil && !errors.Is(err, ErrWarning) {
+		t.Fatal(err)
+	}
+	p2 := interfaceContainer{
+		Iface:  Interface{Value: &sanitizeChild{}},
+		IfaceP: &Interface{Value: &sanitizeChild{}},
+	}
+	Default(p2, false)
+	if !reflect.DeepEqual(p1, p2) {
+		t.Fatal("TestSanitizeInterfaceValue failed.")
+	}
 }
 
 func show(i interface{}) {

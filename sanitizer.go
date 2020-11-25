@@ -181,11 +181,17 @@ func traverse(v reflect.Value, name string, defaults, limits, reset, clamp bool,
 			}
 			traverse(v.Field(i), v.Type().Field(i).Name, defaults, limits, reset, clamp, parseTagmap(tag), warnings)
 		}
-	default:
-		if !v.CanSet() {
+	case reflect.Interface:
+		traverse(v.Elem(), name, defaults, limits, reset, clamp, tags, warnings)
+		return
+	case reflect.Ptr:
+		if !v.IsZero() {
+			traverse(v.Elem(), name, defaults, limits, reset, clamp, tags, warnings)
 			return
 		}
-		if v.Type() == interfaceType {
+		fallthrough
+	default:
+		if !v.CanSet() {
 			return
 		}
 		if defaults {
