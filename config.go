@@ -120,7 +120,7 @@ func GetSystemConfigPath() (path string, err error) {
 		"openbsd", "plan9", "solaris":
 		path = "/etc"
 	case "windows":
-		path = os.ExpandEnv("%%ALLUSERSPROFILE%%")
+		path = os.ExpandEnv("$ALLUSERSPROFILE")
 	case "js":
 		fallthrough
 	default:
@@ -148,7 +148,7 @@ func GetUserConfigPath() (path string, err error) {
 		"openbsd", "plan9", "solaris":
 		path = filepath.Join(os.ExpandEnv("$HOME"), ".config")
 	case "windows":
-		path = os.ExpandEnv("%%USERPROFILE%%")
+		path = os.ExpandEnv("$USERPROFILE")
 	case "js":
 		fallthrough
 	default:

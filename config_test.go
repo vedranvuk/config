@@ -6,6 +6,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
@@ -16,6 +17,20 @@ import (
 	_ "github.com/vedranvuk/config/codec/json"
 	_ "github.com/vedranvuk/config/codec/xml"
 )
+
+func TestPaths(t *testing.T) {
+	path, err := GetUserConfigPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(path)
+
+	path, err = GetSystemConfigPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(path)
+}
 
 func TestReadWriteConfigFile(t *testing.T) {
 	if err := readwriteconfig("json"); err != nil {
