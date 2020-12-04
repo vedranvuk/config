@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/vedranvuk/errorex"
-	"github.com/vedranvuk/reflectex"
+	"github.com/vedranvuk/strconvex"
 )
 
 var (
@@ -213,11 +213,11 @@ func setDefaults(v reflect.Value, name string, tags tagmap, reset bool, warnings
 	}
 	if nilval, ok = tags[NilKey]; ok {
 		nv := reflect.New(v.Type())
-		if err := reflectex.StringToValue(nilval, reflect.Indirect(nv)); err != nil {
+		if err := strconvex.StringToValue(nilval, reflect.Indirect(nv)); err != nil {
 			warnings.Extra(ErrInvalidNil.WrapCauseArgs(err, name))
 			return
 		}
-		if reflectex.CompareValues(v, nv.Elem()) == 0 {
+		if CompareValues(v, nv.Elem()) == 0 {
 			zero = true
 		}
 	}
@@ -230,7 +230,7 @@ func setDefaults(v reflect.Value, name string, tags tagmap, reset bool, warnings
 		}
 		return
 	}
-	if err := reflectex.StringToValue(defval, v); err != nil {
+	if err := strconvex.StringToValue(defval, v); err != nil {
 		warnings.Extra(err)
 	}
 }
@@ -249,11 +249,11 @@ func setLimits(v reflect.Value, name string, tags tagmap, clamp bool, warnings *
 		var matched bool = false
 		var cv reflect.Value = reflect.New(v.Type())
 		for i := 0; i < len(vals); i++ {
-			if err := reflectex.StringToValue(vals[i], reflect.Indirect(cv)); err != nil {
+			if err := strconvex.StringToValue(vals[i], reflect.Indirect(cv)); err != nil {
 				warnings.Extra(ErrInvalidRange.WrapCauseArgs(err, name))
 				return
 			}
-			if reflectex.CompareValues(v, cv.Elem()) == 0 {
+			if CompareValues(v, cv.Elem()) == 0 {
 				matched = true
 				break
 			}
@@ -274,11 +274,11 @@ func setLimits(v reflect.Value, name string, tags tagmap, clamp bool, warnings *
 		}
 		// Minimum.
 		if vals[0] != "" {
-			if err := reflectex.StringToValue(vals[0], reflect.Indirect(cv)); err != nil {
+			if err := strconvex.StringToValue(vals[0], reflect.Indirect(cv)); err != nil {
 				warnings.Extra(ErrInvalidRange.WrapCauseArgs(err, name))
 				return
 			}
-			if reflectex.CompareValues(v, cv.Elem()) < 0 {
+			if CompareValues(v, cv.Elem()) < 0 {
 				if clamp {
 					v.Set(cv.Elem())
 				} else {
@@ -286,7 +286,7 @@ func setLimits(v reflect.Value, name string, tags tagmap, clamp bool, warnings *
 					if !ok {
 						v.Set(reflect.Zero(v.Type()))
 					}
-					if err := reflectex.StringToValue(def, v); err != nil {
+					if err := strconvex.StringToValue(def, v); err != nil {
 						warnings.Extra(ErrInvalidRange.WrapCauseArgs(err, name))
 						return
 					}
@@ -295,11 +295,11 @@ func setLimits(v reflect.Value, name string, tags tagmap, clamp bool, warnings *
 		}
 		// Maximum.
 		if vals[1] != "" {
-			if err := reflectex.StringToValue(vals[1], reflect.Indirect(cv)); err != nil {
+			if err := strconvex.StringToValue(vals[1], reflect.Indirect(cv)); err != nil {
 				warnings.Extra(ErrInvalidRange.WrapCauseArgs(err, name))
 				return
 			}
-			if reflectex.CompareValues(v, cv.Elem()) > 0 {
+			if CompareValues(v, cv.Elem()) > 0 {
 				if clamp {
 					v.Set(cv.Elem())
 				} else {
@@ -307,7 +307,7 @@ func setLimits(v reflect.Value, name string, tags tagmap, clamp bool, warnings *
 					if !ok {
 						v.Set(reflect.Zero(v.Type()))
 					}
-					if err := reflectex.StringToValue(def, v); err != nil {
+					if err := strconvex.StringToValue(def, v); err != nil {
 						warnings.Extra(ErrInvalidRange.WrapCauseArgs(err, name))
 						return
 					}

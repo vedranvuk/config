@@ -1,0 +1,5 @@
+github.com/vedranvuk/errorex v0.3.2/go.mod h1:sP0DQ6dh/fEmjtNU/5+8G2eV981hms4mIBESJ1XI90Q=
+github.com/vedranvuk/strconvex v0.0.1 h1:UJSXJyVykV5/OxQixIoyhg/z53U292zIOYPljksKOSY=
+github.com/vedranvuk/strconvex v0.0.1/go.mod h1:88nXiPCTHEkBymEfadV2TVTikaM8um2JfrRy9nW1iV4=
+github.com/vedranvuk/typeregistry v0.1.0 h1:tx0817samtlTU3nWnFemorJ3mehajAAdHqsdQ/DbFww=
+github.com/vedranvuk/typeregistry v0.1.0/go.mod h1:hJh16szXLU1sWNS4v8QKufj75k9QAnrK/uU0YkYwSUY=
