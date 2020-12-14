@@ -127,6 +127,9 @@ func TestSanitizeInterfaceValue(t *testing.T) {
 }
 
 func show(i interface{}) {
+	if !testing.Verbose() {
+		return
+	}
 	b, err := json.MarshalIndent(i, "", "\t")
 	if err != nil {
 		panic(err)

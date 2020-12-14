@@ -23,13 +23,17 @@ func TestPaths(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(path)
+	if testing.Verbose() {
+		fmt.Println(path)
+	}
 
 	path, err = GetSystemConfigPath()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(path)
+	if testing.Verbose() {
+		fmt.Println(path)
+	}
 }
 
 func TestReadWriteConfigFile(t *testing.T) {
@@ -51,11 +55,13 @@ func TestReadWriteConfigFile(t *testing.T) {
 
 func readwriteconfig(codec string) error {
 	type TestConfig struct {
-		Name string
-		Age  int
+		Name  string
+		Age   int
+		Truth *bool
 	}
 	filename := "testconfig." + codec
-	out := &TestConfig{"Foo", 42}
+	t := true
+	out := &TestConfig{"Foo", 42, &t}
 	if err := WriteConfigFile(filename, out); err != nil {
 		return err
 	}
